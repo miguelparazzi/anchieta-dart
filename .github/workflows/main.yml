@@ -36,28 +36,27 @@ jobs:
       - name: Show Summary
         working-directory: ./aluno_code
         run: |
-          # 1. Filtra as linhas de sucesso e falha para arquivos temporários
-          grep '"result":"success"' machine_results.json > passed.txt || true
-          grep '"result":"failure"' machine_results.json > failed.txt || true
-          grep '"result":"error"' machine_results.json > error.txt || true
+          # 1. Filtra apenas linhas que são resultados de TESTES REAIS (possuem testID)
+          # Isso ignora o evento de resumo final do Dart
+          grep '"testID":' machine_results.json | grep '"result":"success"' > passed.txt || true
+          grep '"testID":' machine_results.json | grep '"result":"failure"' > failed.txt || true
+          grep '"testID":' machine_results.json | grep '"result":"error"' > error.txt || true
 
-          # 2. Conta as linhas de cada arquivo usando wc -l (retorna apenas o número)
-          # O 'awk' serve para pegar apenas o número, pois o wc às vezes traz o nome do arquivo junto
+          # 2. Conta as linhas
           P=$(wc -l < passed.txt | awk '{print $1}')
           F=$(wc -l < failed.txt | awk '{print $1}')
           E=$(wc -l < error.txt | awk '{print $1}')
 
-          # 3. Garante que são números (se vazio, vira 0)
+          # 3. Garante valores numéricos
           P=${P:-0}
           F=${F:-0}
           E=${E:-0}
 
-          # 4. Soma simples
           REPROVADOS=$((F + E))
           TOTAL=$((P + REPROVADOS))
 
           echo "------------------------------------------"
-          echo "RESULTADOS FINAIS"
+          echo "RESULTADOS FINAIS (Ajustado)"
           echo "------------------------------------------"
           echo "Total de testes: $TOTAL"
           echo "Passou: $P"
